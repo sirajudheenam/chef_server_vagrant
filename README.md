@@ -228,8 +228,8 @@ My hosts file looks like this.
 
     192.168.100.10  chefserver.abcd.xyz   chefserver
 
-  echo '192.168.100.11  chefws.abcd.xyz   chefws' >> /etc/hosts
-  echo '192.168.100.11  chefnode.abcd.xyz   chefnode' >> /etc/hosts
+    echo '192.168.100.12  chefws.abcd.xyz   chefws' >> /etc/hosts
+    echo '192.168.100.11  chefnode.abcd.xyz   chefnode' >> /etc/hosts
 
 Verify that the machine is accessible from your host by requesting via PING command.
 
