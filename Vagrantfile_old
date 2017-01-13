@@ -1,0 +1,150 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+VAGRANTFILE_API_VERSION = 2
+BOX = "bento/ubuntu-14.04"
+# BOX_URL = "file://~/vagrant_boxes/ub1404.box"
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  # Chef Server config
+  config.vm.define "chef-server" do |server|
+    server.vm.box = BOX
+    #server.vm.box_url = BOX_URL
+    server.vm.boot_timeout = 1000
+    server.vm.hostname = 'chefserver.abc.xyz'
+    server.vm.network "private_network", ip: "192.168.56.10", virtualbox__hostonly: true
+    # server.ssh.private_key_path = "~/.vagrant.d/insecure_private_key"
+    # server.ssh.username = "vagrant"
+    # server.ssh.password = "vagrant"
+    server.ssh.forward_agent = true
+    server.ssh.insert_key = false
+    server.vm.provider :virtualbox do |vb|
+        vb.customize ["modifyvm", :id, "--memory", "2048"]
+        vb.gui = true
+    end
+    # server.vm.provision "shell", inline: <<-SHELL
+    #   apt-get update
+    #   if [ ! -e "/tmp/chef-server-core_12.11.1-1_amd64.deb" ];then
+    #     wget -O /tmp/chef-server-core_12.11.1-1_amd64.deb https://packages.chef.io/stable/ubuntu/14.04/chef-server-core_12.11.1-1_amd64.deb
+    #     wget -O /tmpchef-manage_2.4.4-1_amd64.deb https://packages.chef.io/files/stable/chef-manage/2.4.4/ubuntu/14.04/chef-manage_2.4.4-1_amd64.deb
+    #     sudo dpkg -i /tmp/chef-server-core_12.11.1-1_amd64.deb
+    #     sudo dpkg -i /tmpchef-manage_2.4.4-1_amd64.deb
+    #   fi
+    # SHELL
+    #
+    # server.vm.provision "shell", inline: <<-SHELL
+    #   rm -rf /etc/chef/*.pem
+    #   echo Y | chef-server-ctl org-delete abcinc
+    #   echo Y | chef-server-ctl user-delete mujeebc
+    # SHELL
+
+    server.vm.provision "shell", inline: <<-SHELL
+      chef-server-ctl reconfigure
+      mkdir -p /etc/chef/
+      rm -rf /etc/chef/mujeebc.pem
+      chef-server-ctl user-create mujeebc Mujeeb Chilwan mujeebd@abc.io 'abc12345' --filename /etc/chef/mujeebc.pem
+      chef-server-ctl org-create abcinc 'ABC Inc' --association_user mujeebc --filename /etc/chef/ABCINC-validator.pem
+      chef-server-ctl install chef-manage #200 MB file takes a bit to download and install
+      chef-server-ctl reconfigure
+      chef-manage-ctl reconfigure
+      chef-server-ctl install opscode-push-jobs-server
+      chef-server-ctl reconfigure
+      opscode-push-jobs-server-ctl reconfigure
+      chef-server-ctl install opscode-reporting
+      chef-server-ctl reconfigure
+      opscode-reporting-ctl reconfigure
+      mkdir -p /root/packages
+      #chef-server-ctl install chef-manage --path /root/packages
+      #sudo mkdir /etc/opscode && sudo touch /etc/opscode/chef-server.rb
+    SHELL
+
+  end
+
+  #  scp /var/opt/opscode/nginx/ca/chefserver.abc.xyz.crt vagrant@192.168.56.12:/tmp
+end
+    # https://www.linode.com/docs/applications/chef/deploy-a-chef-server-workstation-and-node-on-ubuntu-14-04
+    # On Server
+
+
+
+
+    # -*- mode: ruby -*-
+    # vi: set ft=ruby :
+
+    # All Vagrant configuration is done below. The "2" in Vagrant.configure
+    # configures the configuration version (we support older styles for
+    # backwards compatibility). Please don't change it unless you know what
+    # you're doing.
+    VAGRANTFILE_API_VERSION = 2
+    BOX = "bento/ubuntu-14.04"
+    Vagrant.configure("2") do |config|
+      # Chef node config
+      config.vm.define "chef-ws" do |node|
+        node.vm.box = BOX
+        # ws.vm.box_url = BOX_URL
+        node.vm.boot_timeout = 1000
+        node.vm.hostname = 'chefnode.abcd.xyz'
+        node.vm.network "private_network", ip: "192.168.56.12", virtualbox__hostonly: true
+        # ws.ssh.private_key_path = "~/.vagrant.d/insecure_private_key"
+        node.ssh.forward_agent = true
+        node.ssh.insert_key = false
+        # ws.ssh.username = "vagrant"
+        # ws.ssh.password = "vagrant"
+        node.vm.provider :virtualbox do |vb|
+            vb.customize ["modifyvm", :id, "--memory", "1024"]
+            vb.gui = true
+        end
+        # ws.vm.provision "shell", inline: <<-SHELL
+        #   #apt-get update
+        #   wget --no-check-certificate https://packages.chef.io/files/stable/chefdk/1.1.16/ubuntu/14.04/chefdk_1.1.16-1_amd64.deb -O /tmp/chefdk_1.1.16-1_amd64.deb
+        #   dpkg -i /tmp/chefdk_1.1.16-1_amd64.deb
+        # SHELL
+        ws.vm.provision "shell", inline: <<-SHELL
+          which ruby >> /tmp/ruby_path
+          echo 'eval "$(chef shell-init bash)"' >> ~/.bash_profile
+          source ~/.bash_profile
+          which ruby >> /tmp/ruby_path
+          chef generate app chef-repo
+          mkdir -p ~/chef-repo/.chef
+          echo '.chef' >> ~/chef-repo/.gitignore
+        SHELL
+
+    # Copy /etc/chef/*pem to WorkStation /home/vagrant/chef-repo/
+
+    # Copy /var/opt/opscode/nginx/ca/chefserver.crt to workstation /home/vagrant/chef-repo/.chef/trusted_certs
+
+    # On ubuntu 14.04
+    # knife bootstrap vagrant@192.168.56.11 -N node1 --sudo --user-sudo-password
+
+
+      end
+
+    end
+
+
+    # -*- mode: ruby -*-
+    # vi: set ft=ruby :
+
+    # All Vagrant configuration is done below. The "2" in Vagrant.configure
+    # configures the configuration version (we support older styles for
+    # backwards compatibility). Please don't change it unless you know what
+    # you're doing.
+    VAGRANTFILE_API_VERSION = 2
+    BOX = "bento/ubuntu-14.04"
+    Vagrant.configure("2") do |config|
+      # Chef Workstation config
+      config.vm.define "chef-node" do |ws|
+        ws.vm.box = BOX
+        # ws.vm.box_url = BOX_URL
+        ws.vm.boot_timeout = 1000
+        ws.vm.hostname = 'chefnode.abc.xyz'
+        ws.vm.network "private_network", ip: "192.168.56.11", virtualbox__hostonly: true
+        # ws.ssh.private_key_path = "~/.vagrant.d/insecure_private_key"
+        ws.ssh.forward_agent = true
+        ws.ssh.insert_key = false
+        # ws.ssh.username = "vagrant"
+        # ws.ssh.password = "vagrant"
+        ws.vm.provider :virtualbox do |vb|
+            vb.customize ["modifyvm", :id, "--memory", "1024"]
+            vb.gui = true
+        end
+      end
+    end
