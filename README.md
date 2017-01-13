@@ -204,11 +204,13 @@ Step 15: Verify that your Chef Server is accessible via Browser.
 Go to your favorite browser and navigate to your Chef Server's IP address or FQDN.
 
 ![Chef-Server-On-Browser](images/chef_server_web_interface.png)
+
 ![Chef-Manage-Login](images/chef_manage_login.png)
-![chef_manage_admin_starter_kit](images/chef_manage_admin_starter_kit.png)
+
+<!-- ![chef_manage_admin_starter_kit](images/chef_manage_admin_starter_kit.png)
 ![chef_manage_download_started_kit](images/chef_manage_download_started_kit.png)
 ![chef_manage_download_started_kit_confimation](images/chef_manage_download_started_kit_confimation.png)
-![chef_manage_download_started_kit_save](images/chef_manage_download_started_kit_save.png)
+![chef_manage_download_started_kit_save](images/chef_manage_download_started_kit_save.png) -->
 
 ~> Note: Make your `hosts` file aware of the __chefserver__'s IP address on the machine from which you are trying this. Guide on this can be found [here](https://support.rackspace.com/how-to/modify-your-hosts-file/).
 
@@ -260,7 +262,7 @@ You should see something like this as output.
 
 
 <a href="setup-chef-node"></a>
-# Part 2: Setup Chef Node to be managed
+# Part 2: Setup Chef Node (to manage with Chef Server):
 
     vagrant up chefnode
 
@@ -434,33 +436,32 @@ Step 17: Execute the bootstrap the node and run the cookbook recipe `nginx-passe
 
 The truncated output would be
 
-```
-Connecting to chefnode.abcd.xyz
-chefnode.abcd.xyz -----> Existing Chef installation detected
-chefnode.abcd.xyz Starting the first Chef Client run...
-chefnode.abcd.xyz Starting Chef Client, version 12.17.44
-chefnode.abcd.xyz resolving cookbooks for run list: ["nginx-passenger"]
-chefnode.abcd.xyz Synchronizing Cookbooks:
-chefnode.abcd.xyz   - apt (5.0.1)
-chefnode.abcd.xyz   - nginx-passenger (0.1.1)
-chefnode.abcd.xyz   - compat_resource (12.16.3)
-chefnode.abcd.xyz   - yum (4.1.0)
-.
-.
-.
-chefnode.abcd.xyz Running handlers:
-chefnode.abcd.xyz Running handlers complete
-chefnode.abcd.xyz
-chefnode.abcd.xyz Deprecated features used!
-chefnode.abcd.xyz   Cloning resource attributes for apt_update[update] from prior resource
-chefnode.abcd.xyz Previous apt_update[update]: /var/chef/cache/cookbooks/nginx-passenger/recipes/default.rb:10:in `from_file'
-chefnode.abcd.xyz Current  apt_update[update]: /var/chef/cache/cookbooks/nginx-passenger/recipes/default.rb:23:in `from_file' at 1 location:
-chefnode.abcd.xyz     - /var/chef/cache/cookbooks/nginx-passenger/recipes/default.rb:23:in `from_file'
-chefnode.abcd.xyz    See https://docs.chef.io/deprecations_resource_cloning.html for further details.
-chefnode.abcd.xyz
-chefnode.abcd.xyz Chef Client finished, 4/22 resources updated in 24 seconds
+    Connecting to chefnode.abcd.xyz
+    chefnode.abcd.xyz -----> Existing Chef installation detected
+    chefnode.abcd.xyz Starting the first Chef Client run...
+    chefnode.abcd.xyz Starting Chef Client, version 12.17.44
+    chefnode.abcd.xyz resolving cookbooks for run list: ["nginx-passenger"]
+    chefnode.abcd.xyz Synchronizing Cookbooks:
+    chefnode.abcd.xyz   - apt (5.0.1)
+    chefnode.abcd.xyz   - nginx-passenger (0.1.1)
+    chefnode.abcd.xyz   - compat_resource (12.16.3)
+    chefnode.abcd.xyz   - yum (4.1.0)
+    .
+    .
+    .
+    chefnode.abcd.xyz Running handlers:
+    chefnode.abcd.xyz Running handlers complete
+    chefnode.abcd.xyz
+    chefnode.abcd.xyz Deprecated features used!
+    chefnode.abcd.xyz   Cloning resource attributes for apt_update[update] from prior resource
+    chefnode.abcd.xyz Previous apt_update[update]: /var/chef/cache/cookbooks/nginx-passenger/recipes/default.rb:10:in `from_file'
+    chefnode.abcd.xyz Current  apt_update[update]: /var/chef/cache/cookbooks/nginx-passenger/recipes/default.rb:23:in `from_file' at 1 location:
+    chefnode.abcd.xyz     - /var/chef/cache/cookbooks/nginx-passenger/recipes/default.rb:23:in `from_file'
+    chefnode.abcd.xyz    See https://docs.chef.io/deprecations_resource_cloning.html for further details.
+    chefnode.abcd.xyz
+    chefnode.abcd.xyz Chef Client finished, 4/22 resources updated in 24 seconds
 
-```
+
 Check for any errors and troubleshoot them.
 
 Step 18: Navigate your browser to `http://192.168.100.11` and you should see something like this:
