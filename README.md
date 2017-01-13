@@ -17,9 +17,10 @@ There are three parts in this guide.
 
 [Part 1 - Setup Chef Server](#setup-chef-server)
 
-[Part 2 - Setup Chef WorkStation](#setup-chef-workstation)
+[Part 2 - Setup Chef Node](#setup-chef-node)
 
-[Part 3 - Setup Chef Node](#setup-chef-node)
+[Part 3 - Setup Chef WorkStation](#setup-chef-workstation)
+
 
 <a href="setup-chef-server"></a>
 # Part 1: Setup Chef Server
@@ -258,54 +259,60 @@ You should see something like this as output.
     round-trip min/avg/max/stddev = 0.242/0.298/0.377/0.057 ms
 
 
+<a href="setup-chef-node"></a>
+# Part 2: Setup Chef Node to be managed
+
+    vagrant up chefnode
+
+    vagrant ssh chefnode
+
+On Chef node:
+
+    sudo -i
+    echo '192.168.100.10  chefserver.abcd.xyz  chefserver' >> /etc/hosts
+
 <a href="setup-chef-workstation"></a>
-# Part 2: Setup Chef WorkStation
+# Part 3: Setup Chef WorkStation
 
 Some people prefer to set-up workstation VM without having to mess the local laptop or desktop they have. You can also use this guide to set up your local WorkStation, just skip the VM creation part.
 
-Step 1: Create another VM just updating the `Vagrantfile`:
-
-Copy the below code and paste it on your `Vagrantfile` just after the line `  # Chef Server config ends here.` comment and just above the final `end`.
-
-=========
-
-Step 2: Boot up the machine using `vagrant up`
+Step 1: Boot up the machine using `vagrant up`
 
     vagrant up chefws
 
 ~> Note: Since you have added a new machine to spin up. Vagrant will bring another machine up with a name `chefws`.
 
-Step 3: Login/SSH to your Chef WorkStation.
+Step 2: Login/SSH to your Chef WorkStation.
 
     vagrant ssh chefws
 
 ~> Note: Use `chefws` with `vagrant ssh` command to login to the _Chef WorkStation_.
 
-Step 4: Edit `/etc/hosts` file on __Chef WorkStation__ and add an entry at the end of the file.
+Step 3: Edit `/etc/hosts` file on __Chef WorkStation__ and add an entry at the end of the file.
 
   echo  '192.168.100.10 chefserver.abcd.xyz  chefserver' >> /etc/hosts
   echo  '192.168.100.12 chefnode.abcd.xyz  chefnode' >> /etc/hosts
 
 Verify using PING command to see if the __Chef Server__ is reachable from __Chef WorkStation__.
 
-Step 5: Get [ChefDK download URL](https://downloads.chef.io/chefdk) from Chef website and install it on your _Chef WorkStation_.
+Step 4: Get [ChefDK download URL](https://downloads.chef.io/chefdk) from Chef website and install it on your _Chef WorkStation_.
 
     wget -O /tmp/chefdk_1.1.16-1_amd64.deb https://packages.chef.io/files/stable/chefdk/1.1.16/ubuntu/16.04/chefdk_1.1.16-1_amd64.deb
 
- Step 6: Install ChefDK on your Chef WorkStation:
+ Step 5: Install ChefDK on your Chef WorkStation:
 
     sudo dpkg -i /tmp/chefdk_1.1.16-1_amd64.deb
 
- Step 7: Verify your ChefDK installation
+ Step 6: Verify your ChefDK installation
 
     chef verify
 
-Step 8: Make your Chef WorkStation to use `ruby` provided by Chef:
+Step 7: Make your Chef WorkStation to use `ruby` provided by Chef:
 
     echo 'eval "$(chef shell-init bash)"' >> ~/.bash_profile
     source ~/.bash_profile
 
-Step 9: Verify that you are using ChefDK `ruby`.
+Step 8: Verify that you are using ChefDK `ruby`.
 
     which ruby
 
@@ -313,7 +320,7 @@ Output looks like this.
 
     /opt/chefdk/embedded/bin/ruby
 
-Step 10: Generate `chef-repo` on your home directory of Chef WorkStation.
+Step 9: Generate `chef-repo` on your home directory of Chef WorkStation.
 
     chef generate app chef-repo
 
@@ -322,15 +329,17 @@ Verify that it has generated a directory `chef-repo` to start with.
     ls ~
     chef-repo
 
-Step 11: Change your current directory to `chef-repo` and create `.chef` directory on it.
+Step 10: Change your current directory to `chef-repo` and create `.chef` directory on it.
 
     cd chef-repo
     mkdir .chef
     cd .chef
 
-Step 12: Copy /etc/chef/abcdinc-validator.pem  /etc/chef/sammiller.pem from __Chef Server__ to __Chef WorkStation__. Run the following command on your __Chef WorkStation__.
+Step 11: Copy /etc/chef/abcdinc-validator.pem  /etc/chef/sammiller.pem from __Chef Server__ to __Chef WorkStation__. Run the following command on your __Chef WorkStation__.
 
     scp vagrant@192.168.100.10:/etc/chef/*.pem /home/vagrant/chef-repo/.chef
+
+Password is `vagrant`
 
 For ZSH users, escape wildcard like this.
 
@@ -342,7 +351,7 @@ Make sure you have keys downloaded at `/home/vagrant/chef-repo/.chef`
     # Output would be
     # abcdinc-validator.pem   sammiller.pem
 
-Step 13: Create `knife.rb` file in `/home/vagrant/chef-repo/.chef` with following contents:
+Step 12: Create `knife.rb` file in `/home/vagrant/chef-repo/.chef` with following contents:
 
     current_dir = File.dirname(__FILE__)
     log_level                :info
@@ -352,14 +361,12 @@ Step 13: Create `knife.rb` file in `/home/vagrant/chef-repo/.chef` with followin
     chef_server_url          "https://chefserver.abcd.xyz/organizations/abcdinc"
     cookbook_path            ["#{current_dir}/../cookbooks"]
 
-
-
-Step 14: Fetch the certificate from __Chef Server__:
+Step 13: Fetch the certificate from __Chef Server__:
 
     cd ~/chef-repo
     knife ssl fetch
 
-Step 14a (Optional): In case if you encounter error, login to your Chef Server and copy the certificate (chefserver.abcd.xyz.crt) from `/var/opt/opscode/nginx/ca/` to `/tmp` directory of the server.
+Step 13a (Optional): Only if you encounter with error, login to your Chef Server and copy the certificate (chefserver.abcd.xyz.crt) from `/var/opt/opscode/nginx/ca/` to `/tmp` directory of the server.
 
 Open another terminal window/tab on your local machine and login to Chef Server
 
@@ -371,10 +378,11 @@ On the __Chef Server__, execute the following
     sudo -i
     cp /var/opt/opscode/nginx/ca/chefserver.abcd.xyz.crt /tmp
     scp /tmp/chefserver.abcd.xyz.crt vagrant@192.168.100.12:/home/vagrant/chef-repo/.chef/trusted_certs/chefserver.abcd.xyz.crt
+    # Input password `vagrant` when prompted.
     exit
     exit
 
-Step 15: Go back to __Chef WorkStation__ and execute the following:
+Step 14: Go back to __Chef WorkStation__ and execute the following:
 
     cd ~/chefserver
     vagrant ssh chefws
@@ -385,9 +393,9 @@ Step 15: Go back to __Chef WorkStation__ and execute the following:
 The output should look like this.
 
     Connecting to host chefserver.abcd.xyz:443
-    Successfully verified certificates from `chefserver.abcd.xyz'
+    Successfully verified certificates from `chefserver.abcd.xyz`
 
-Step 16: Execute the following to check, WorkStation is able to make connection and retrieve client details:
+Step 15: Execute the following to check, WorkStation is able to make connection and retrieve client details:
 
     knife client list
 
@@ -395,20 +403,65 @@ Output should look similar to this.
 
     abcdinc-validator
 
+Step 16: Upload a cookbook to `/home/vagrant/chef-repo/cookbooks/`
 
-<a href="setup-chef-node"></a>
-# Part 3: Setup Chef Node to be managed
+```
+    cd /home/vagrant/chef-repo/cookbooks/
+    git clone https://github.com/sirajudheenam/nginx-passenger.git
+    knife supermarket download apt
+    knife supermarket download yum
+    knife supermarket download compat_resource
+    tar -xvf apt*.gz
+    tar -xvf yum*.gz
+    tar -xvf compat_resource*.gz
+    rm -f *.tar.gz
+    knife cookbook upload nginx-passenger
+    knife cookbook list
+    # Output should look similar to this.
+    # apt               5.0.1
+    # compat_resource   12.16.3
+    # nginx-passenger   0.1.1
+    # yum               4.1.0
 
-    vagrant up chefnode
+```
 
-    vagrant ssh chefnode
 
-On Chef node:
+Step 17: Execute the bootstrap the node and run the cookbook recipe `nginx-passenger`:
 
-    sudo -i
-    echo '192.168.100.10  chefserver.abcd.xyz  chefserver' >> /etc/hosts
-    echo '192.168.100.12  chefws.abcd.xyz  chefws' >> /etc/hosts
+    cd /home/vagrant/chef-repo/
 
-On Chef WorkStation:
+    knife bootstrap vagrant@chefnode.abcd.xyz -P vagrant -N nginxnode --sudo --use-sudo-password --run-list 'recipe[nginx-passenger]'
 
-    knife bootstrap vagrant@chefnode.abcd.xyz -P vagrant -N chefnode --sudo --use-sudo-password --run-list 'recipe[nginx-passenger]'
+The truncated output would be
+
+```
+Connecting to chefnode.abcd.xyz
+chefnode.abcd.xyz -----> Existing Chef installation detected
+chefnode.abcd.xyz Starting the first Chef Client run...
+chefnode.abcd.xyz Starting Chef Client, version 12.17.44
+chefnode.abcd.xyz resolving cookbooks for run list: ["nginx-passenger"]
+chefnode.abcd.xyz Synchronizing Cookbooks:
+chefnode.abcd.xyz   - apt (5.0.1)
+chefnode.abcd.xyz   - nginx-passenger (0.1.1)
+chefnode.abcd.xyz   - compat_resource (12.16.3)
+chefnode.abcd.xyz   - yum (4.1.0)
+.
+.
+.
+chefnode.abcd.xyz Running handlers:
+chefnode.abcd.xyz Running handlers complete
+chefnode.abcd.xyz
+chefnode.abcd.xyz Deprecated features used!
+chefnode.abcd.xyz   Cloning resource attributes for apt_update[update] from prior resource
+chefnode.abcd.xyz Previous apt_update[update]: /var/chef/cache/cookbooks/nginx-passenger/recipes/default.rb:10:in `from_file'
+chefnode.abcd.xyz Current  apt_update[update]: /var/chef/cache/cookbooks/nginx-passenger/recipes/default.rb:23:in `from_file' at 1 location:
+chefnode.abcd.xyz     - /var/chef/cache/cookbooks/nginx-passenger/recipes/default.rb:23:in `from_file'
+chefnode.abcd.xyz    See https://docs.chef.io/deprecations_resource_cloning.html for further details.
+chefnode.abcd.xyz
+chefnode.abcd.xyz Chef Client finished, 4/22 resources updated in 24 seconds
+
+```
+Check for any errors and troubleshoot them.
+
+Step 18: Navigate your browser to `http://192.168.100.11` and you should see something like this:
+![chef_node_with_nginx_installed](images/chef_node_with_nginx_installed_IP.png)
